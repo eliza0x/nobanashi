@@ -1,0 +1,27 @@
+{
+  "name": "nobanashi",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/highlight.js": "^10.1.0",
+    "@types/marked": "^5.0.0",
+    "axios": "^1.4.0",
+    "highlight.js": "^11.8.0",
+    "marked": "^5.0.2",
+    "vue": "^3.2.47",
+    "vue-logger-plugin": "^2.2.3",
+    "vue-router": "^4.2.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.1.0",
+    "typescript": "^5.0.2",
+    "vite": "^4.3.2",
+    "vue-tsc": "^1.4.2"
+  }
+}
