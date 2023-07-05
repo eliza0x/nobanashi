@@ -36,9 +36,9 @@ executable nobanashi
                        bytestring,
                        http-types,
                        http-media,
-                       megaparsec,
-                       mmark,
-                       lucid
+                       cmark,
+                       skylighting,
+                       blaze-html
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities
