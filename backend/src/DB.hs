@@ -24,7 +24,6 @@ import qualified Data.ByteString.Lazy as BL
 import Data.ByteString ( ByteString )
 import qualified Data.ByteString.Char8 as B
 import Control.Monad (unless, forM)
-import Text.Pandoc.Builder (image)
 
 imagePath :: FilePath
 imagePath = "static/images/"

@@ -10,6 +10,7 @@ module Main (main) where
 
 import Model
 import qualified App
+import qualified Parser
 
 import qualified Network.Wai.Handler.Warp as Wai
 import Servant
@@ -61,10 +62,10 @@ server cache = getAllArticle :<|> getArticle :<|> upsertArticle :<|> deleteArtic
           let body = case Model.body =<< article of
                 Just a -> Right a
                 Nothing -> Left "failed to get article"
-              html = App.parseMd =<< body
-          return $ case (article, html) of
-            (Just article', Right html') -> Model.updateBody article' (Just html')
-            (_, Left err) -> error $ show err
+          return $ case (article, Parser.parse =<< body) of
+            (Just article', Right html) -> Model.updateBody article' (Just html)
+            (Just article', Left err) -> Model.updateBody article' (Just err) -- これあんまりよくないかも
+            (Nothing, Left err) -> error $ show err
             _ -> error "?"
 
         upsertArticle :: AuthInfo -> Text -> Article -> Handler NoContent

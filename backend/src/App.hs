@@ -22,6 +22,7 @@ module App (
 
 import Model
 import qualified DB
+import qualified Parser
 
 import Data.Text (Text, pack, unpack)
 import Data.Map ((!?))
@@ -29,64 +30,9 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.IORef
 import Data.ByteString (ByteString)
-import qualified Text.Pandoc as P
 import Data.Maybe (fromMaybe)
 
-parseMd :: Text -> Either Text Text
-parseMd text = map' (pack . show) id $ P.runPure (P.writeHtml5String P.def =<< P.readMarkdown readerDef text)
-  where
-  readerDef :: P.ReaderOptions
-  readerDef = P.def { P.readerExtensions = P.enableExtension P.Ext_smart P.pandocExtensions }
-
-  map' :: (a -> c) -> (b -> d) -> Either a b -> Either c d
-  map' f _ (Left l) = Left $ f l
-  map' _ g (Right r) = Right $ g r
-
-{-
-parseMd :: Text -> Either Text Article
-parseMd text = do
-  P.Pandoc meta blocks <- map' (pack . show) id $ P.runPure (P.readMarkdown readerDef text) 
-  html <- map' (pack . show) id $ P.runPure (P.writeHtml5String P.def $ P.Pandoc meta blocks)
-  let meta' = P.unMeta meta
-  do
-    p <- path meta'
-    t <- title meta'
-    u <- update meta'
-    d <- description meta'
-    ts <- tags meta'
-    return $ Article p t u d ts (Just html)
-  where
-  readerDef :: P.ReaderOptions
-  readerDef = P.def { P.readerExtensions = P.enableExtension P.Ext_smart P.pandocExtensions }
-
-  map' :: (a -> c) -> (b -> d) -> Either a b -> Either c d
-  map' f _ (Left l) = Left $ f l
-  map' _ g (Right r) = Right $ g r
-
-  withErr :: err -> Maybe a -> Either err a
-  withErr err Nothing = Left err
-  withErr _ (Just val) = Right val
-  fromMetaString :: P.MetaValue -> Maybe Text
-  fromMetaString (P.MetaString t) = Just t
-  fromMetaString _ = Nothing
-
-  fromMetaList' :: [P.MetaValue] -> Maybe [Text]
-  fromMetaList' [] = Just []
-  fromMetaList' ((P.MetaString x):xs) = (x:) <$> fromMetaList' xs
-  fromMetaList' _ = Nothing
-
-  fromMetaList :: P.MetaValue -> Maybe [Text]
-  fromMetaList (P.MetaList xs) = fromMetaList' xs
-  fromMetaList _ = Nothing
-
-  path, title, update, description :: M.Map Text P.MetaValue -> Either Text Text
-  path blocks        = withErr "failed to get path"        (fromMetaString =<< blocks !? "path")
-  title blocks       = withErr "failed to get blocks"      (fromMetaString =<< blocks !? "title")
-  update blocks      = withErr "failed to get update"      (fromMetaString =<< blocks !? "update")
-  description blocks = withErr "failed to get description" (fromMetaString =<< blocks !? "description")
-  tags :: M.Map Text P.MetaValue -> Either Text [Text]
-  tags blocks        = withErr "failed to get tags"        ((fromMetaList =<< blocks !? "tags") <|> (pure <$> (fromMetaString =<< blocks !? "tags")))
-  -}
+parseMd = Parser.parse
 
 newCache :: IO Cache
 newCache = do
