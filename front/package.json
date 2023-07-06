@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --mode dev",
-    "build": "vue-tsc && vite build --mode production",
-    "preview": "vite preview"
+    "build": "vue-tsc && vite build --mode prod",
+    "preview": "vite preview --mode prod"
   },
   "dependencies": {
     "@types/highlight.js": "^10.1.0",
