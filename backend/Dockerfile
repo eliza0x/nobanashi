@@ -2,14 +2,15 @@
 FROM debian:buster-slim as build
 
 # install stack
-RUN apt-get update && apt-get install -y curl
+RUN apt-get update && apt-get install -y curl gcc ghc
 ENV PATH ~/.local/bin:$PATH
 RUN curl -sSL https://get.haskellstack.org/ | sh
 
 # build
 WORKDIR /app
 COPY source/ /app/
-RUN stack setup --system-ghc
-RUN stack build --system-ghc
 
-CMD ["stack", "run"]
+RUN stack install --system-ghc
+RUN mv "$(stack path --local-install-root --system-ghc)/bin" /opt/bin
+
+CMD ["/opt/bin/nobanashi"]
