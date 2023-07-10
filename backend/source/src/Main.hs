@@ -11,6 +11,7 @@ module Main (main) where
 import Model
 import qualified App
 import qualified Parser
+import qualified DB
 
 import qualified Network.Wai.Handler.Warp as Wai
 import Servant
@@ -133,6 +134,9 @@ main :: IO ()
 main = do
   password <- T.pack <$> getEnv "NOBANASHI_PASS"
   port <- read <$> getEnv "PORT" :: IO Int
+
+  DB.createStaticDirectory
+
   let settings = Wai.setPort port Wai.defaultSettings
   putStrLn "updateing catches..."
   cache <- newIORef =<< App.newCache
