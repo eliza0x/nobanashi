@@ -40,7 +40,8 @@ readArticle path = do
   case A.decode f of
     Nothing -> error $ "failed to decode \"" <> path <> "\""
     Just a -> do
-      print a
+      -- print a
+      putStrLn $ "readArticle: " <> path
       return a
 
 getAllArticles :: IO [Article]

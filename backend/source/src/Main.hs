@@ -132,10 +132,9 @@ app cache password = logStdoutDev
 main :: IO ()
 main = do
   password <- T.pack <$> getEnv "NOBANASHI_PASS"
+  port <- read <$> getEnv "PORT" :: IO Int
+  let settings = Wai.setPort port Wai.defaultSettings
   putStrLn "updateing catches..."
   cache <- newIORef =<< App.newCache
   putStrLn $ "server starting at http://localhost:" <> show port
   Wai.runSettings settings (app cache password)
-  where
-  port = 8080
-  settings = Wai.setPort port Wai.defaultSettings
