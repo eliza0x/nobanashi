@@ -10,7 +10,8 @@ RUN curl -sSL https://get.haskellstack.org/ | sh
 WORKDIR /app
 COPY source/ /app/
 
-RUN stack install --system-ghc
+RUN stack --system-ghc build --dependencies-only
+RUN stack install
 RUN mv "$(stack path --local-install-root --system-ghc)/bin" /opt/bin
 
 CMD ["/opt/bin/nobanashi"]

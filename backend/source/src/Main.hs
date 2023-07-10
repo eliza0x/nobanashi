@@ -137,7 +137,8 @@ app cache password = logStdoutDev
 
 main :: IO ()
 main = do
-  password <- T.pack <$> getEnv "NOBANASHI_PASS"
+  -- password <- T.pack <$> getEnv "NOBANASHI_PASS"
+  password <- return "pass" :: IO Text
   -- port <- read <$> getEnv "PORT" :: IO Int
   port <- return 8080 :: IO Int
 
