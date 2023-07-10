@@ -31,7 +31,8 @@ newtype AuthInfo = AuthInfo {
   username :: Text
   } deriving (Show)
 
-type API = "article" :> Get '[JSON] [Article]
+type API = Get '[JSON] Text
+      :<|> "article" :> Get '[JSON] [Article]
       :<|> "article" :> Capture "path" Text :> Get '[JSON] Article
       :<|> BasicAuth "auth" AuthInfo :> "article" :> Capture "path" Text :> ReqBody '[JSON] Article :> Post '[JSON] NoContent
       :<|> BasicAuth "auth" AuthInfo :> "article" :> Capture "path" Text :> Delete '[JSON] NoContent
@@ -48,12 +49,16 @@ type API = "article" :> Get '[JSON] [Article]
       :<|> "static" :> Raw
 
 server :: IORef Cache -> Server API
-server cache = getAllArticle :<|> getArticle :<|> upsertArticle :<|> deleteArticle
+server cache = getRoot
+          :<|> getAllArticle :<|> getArticle :<|> upsertArticle :<|> deleteArticle
           :<|> getPlainArticle
           :<|> getTags
           :<|> getAllImages :<|> getCategory :<|> getImages :<|> uploadImage
           :<|> serveDirectoryFileServer "static"
-  where getAllArticle :: Handler [Article]
+  where getRoot :: Handler Text
+        getRoot = return "こんにちは"
+
+        getAllArticle :: Handler [Article]
         getAllArticle = liftIO $ do
           App.getAllArticleHeaders cache
 
