@@ -18,7 +18,7 @@ executable nobanashi
   hs-source-dirs:      src
   main-is:             Main.hs
   other-modules:       App,
-                       DB,
+                       Storage,
                        Model,
                        Parser
   default-language:    Haskell2010

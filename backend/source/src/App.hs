@@ -1,13 +1,7 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module App (
   parseMd,
   newCache,
+  App.init,
   getAllArticleHeaders,
   getAllArticles,
   getArticle,
@@ -21,7 +15,7 @@ module App (
   ) where
 
 import Model
-import qualified DB
+import qualified Storage
 import qualified Parser
 
 import Data.Text (Text, pack, unpack)
@@ -34,10 +28,13 @@ import Data.Maybe (fromMaybe)
 
 parseMd = Parser.parse
 
+init :: IO ()
+init = Storage.createStaticDirectory
+
 newCache :: IO Cache
 newCache = do
-  as <- DB.getAllArticles
-  is <- DB.getAllImages
+  as <- Storage.getAllArticles
+  is <- Storage.getAllImages
   let article_cache = M.fromList $ zip (map path as) as
       image_cache = foldr (\(k,v) d -> M.insert k (v : fromMaybe [] (d !? k)) d) M.empty is
   return $ Cache article_cache image_cache
@@ -61,12 +58,12 @@ getArticle cache path = do
 
 upsertArticle :: IORef Cache -> Article -> IO ()
 upsertArticle cache article = do
-  DB.upsertArticle article
+  Storage.upsertArticle article
   writeIORef cache =<< newCache
 
 deleteArticle :: IORef Cache -> Text -> IO ()
 deleteArticle cache path = do
-  DB.deleteArticle path
+  Storage.deleteArticle path
   writeIORef cache =<< newCache
 
 getTags :: IORef Cache -> IO [Text]
@@ -91,5 +88,5 @@ getImages cache category = do
 
 storeImage :: IORef Cache -> Text -> Text -> ByteString -> IO ()
 storeImage cache category path image = do
-  DB.storeImage category path image
+  Storage.storeImage category path image
   writeIORef cache =<< newCache

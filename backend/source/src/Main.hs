@@ -1,17 +1,11 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
 
 module Main (main) where
 
 import Model
 import qualified App
-import qualified Parser
-import qualified DB
 
 import qualified Network.Wai.Handler.Warp as Wai
 import Servant
@@ -68,7 +62,7 @@ server cache = getRoot
           let body = case Model.body =<< article of
                 Just a -> Right a
                 Nothing -> Left "failed to get article"
-          return $ case (article, Parser.parse =<< body) of
+          return $ case (article, App.parseMd =<< body) of
             (Just article', Right html) -> Model.updateBody article' (Just html)
             (Just article', Left err) -> Model.updateBody article' (Just err) -- これあんまりよくないかも
             (Nothing, Left err) -> error $ show err
@@ -141,7 +135,7 @@ main = do
   -- port <- read <$> getEnv "PORT" :: IO Int
   port <- return 8080 :: IO Int
 
-  DB.createStaticDirectory
+  App.init
 
   let settings = Wai.setPort port Wai.defaultSettings
   putStrLn "updateing catches..."
