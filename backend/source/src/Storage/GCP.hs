@@ -24,27 +24,9 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.String as S
 
-key = "goat.webp"
-bkt = "nobanashi-images"
-
 bucket_articles = "nobanashi-articles"
 bucket_info = "nobanashi-info"
 file_sitemap = "sitemap.json"
-
-example :: IO ST.Objects
-example = do
-    lgr  <- G.newLogger G.Debug stdout                                               -- (1)
-    env  <- G.newEnv <&> (G.envLogger .~ lgr) . (G.envScopes .~ Storage.storageReadWriteScope) -- (2) (3)
-    body <- G.sourceBody "goat.webp"
-    C.runResourceT . G.runGoogle env $ do
-        -- G.upload (Storage.objectsInsert bkt Storage.object' & Storage.oiName ?~ key) body
-
-        -- stream <- G.download $ Storage.objectsGet bkt key
-	    -- l <- liftResourceT $ runConduit (stream .| CC.sinkList)
-	    -- return l
-
-        stream <- G.send $ Storage.objectsList bkt 
-	return stream
 
 genEnv = do
     -- lgr  <- G.newLogger G.Debug stdout
