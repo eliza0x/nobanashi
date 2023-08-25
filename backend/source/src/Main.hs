@@ -5,7 +5,8 @@
 module Main (main) where
 
 import Model
-import qualified App
+import qualified Parser as P
+import qualified Storage as S
 
 import qualified Network.Wai.Handler.Warp as Wai
 import Servant
@@ -19,7 +20,8 @@ import Data.Text.Encoding (decodeUtf8)
 import Network.Wai.Middleware.RequestLogger ( logStdoutDev )
 import System.Environment (getEnv)
 import qualified Data.Text as T
-
+import Control.Exception (catch, IOException)
+import Data.Maybe (fromJust)
 
 newtype AuthInfo = AuthInfo {
   username :: Text
@@ -29,90 +31,49 @@ type API = Get '[JSON] Text
       :<|> "article" :> Get '[JSON] [Article]
       :<|> "article" :> Capture "path" Text :> Get '[JSON] Article
       :<|> BasicAuth "auth" AuthInfo :> "article" :> Capture "path" Text :> ReqBody '[JSON] Article :> Post '[JSON] NoContent
-      :<|> BasicAuth "auth" AuthInfo :> "article" :> Capture "path" Text :> Delete '[JSON] NoContent
       
       :<|> "plain_article" :> Capture "path" Text :> Get '[JSON] Article
 
       :<|> "tag" :> Get '[JSON] [Text]
 
-      :<|> "image" :> Get '[JSON] [FilePath]
-      :<|> "image" :> "category" :> Get '[JSON] [FilePath]
-      :<|> "image" :> Capture "category" FilePath :> Get '[JSON] [FilePath]
-      :<|> BasicAuth "auth" AuthInfo :> "image" :> Capture "category" Text :> Capture "path" Text :> ReqBody '[OctetStream] ByteString :> Post '[JSON] NoContent
-
-      :<|> "static" :> Raw
-
-server :: IORef Cache -> Server API
-server cache = getRoot
-          :<|> getAllArticle :<|> getArticle :<|> upsertArticle :<|> deleteArticle
+server :: Server API
+server = getRoot
+          :<|> getAllArticle :<|> getArticle :<|> uploadArticle
           :<|> getPlainArticle
           :<|> getTags
-          :<|> getAllImages :<|> getCategory :<|> getImages :<|> uploadImage
-          :<|> serveDirectoryFileServer "static"
   where getRoot :: Handler Text
         getRoot = return "こんにちは"
 
         getAllArticle :: Handler [Article]
-        getAllArticle = liftIO $ do
-          App.getAllArticleHeaders cache
+        getAllArticle = liftIO $ S.getInfos
 
         getArticle :: Text -> Handler Article
         getArticle path = liftIO $ do
-          article <- App.getArticle cache path
-          let body = case Model.body =<< article of
-                Just a -> Right a
-                Nothing -> Left "failed to get article"
-          return $ case (article, App.parseMd =<< body) of
-            (Just article', Right html) -> Model.updateBody article' (Just html)
-            (Just article', Left err) -> Model.updateBody article' (Just err) -- これあんまりよくないかも
-            (Nothing, Left err) -> error $ show err
-            _ -> error "?"
+          article <- S.getArticle path
+          let body = fromJust $ Model.body article
+          return $ case P.parse body of
+            Right html -> Model.updateBody article (Just html)
+            Left err -> Model.updateBody article (Just err) -- これあんまりよくないかも
 
-        upsertArticle :: AuthInfo -> Text -> Article -> Handler NoContent
-        upsertArticle _ _ article = liftIO $ do
-          App.upsertArticle cache article
-          return NoContent
-
-        deleteArticle :: AuthInfo -> Text -> Handler NoContent
-        deleteArticle _ path = liftIO $ do
-          App.deleteArticle cache path
+        uploadArticle :: AuthInfo -> Text -> Article -> Handler NoContent
+        uploadArticle _ _ article = liftIO $ do
+          S.uploadArticle article
           return NoContent
 
         getPlainArticle :: Text -> Handler Article
         getPlainArticle path = liftIO $ do
-          article <- App.getArticle cache path
-          case article of
-            Just article' -> return article'
-            Nothing -> error "failed"
+          S.getArticle path
 
         getTags :: Handler [Text]
-        getTags = liftIO $ do
-          App.getTags cache
-
-        getAllImages :: Handler [FilePath]
-        getAllImages = liftIO $ do
-          App.getAllImages cache
-
-        getCategory :: Handler [FilePath]
-        getCategory = liftIO $ do
-          App.getCategory cache
-
-        getImages :: FilePath -> Handler [FilePath]
-        getImages category = liftIO $ do
-          App.getImages cache category
-
-        uploadImage :: AuthInfo -> Text -> Text -> ByteString -> Handler NoContent
-        uploadImage _ category path image = liftIO $ do
-          App.storeImage cache category path image
-          return NoContent
+        getTags = liftIO $ return [] -- 一旦省略
 
 api :: Proxy API
 api = Proxy
 
-app :: IORef Cache -> Text -> Application
-app cache password = logStdoutDev
+app :: Text -> Application
+app password = logStdoutDev
     $ cors (const $ Just policy)
-    $ serveWithContext api ctx (server cache)
+    $ serveWithContext api ctx server
   where
   policy :: CorsResourcePolicy
   policy = simpleCorsResourcePolicy
@@ -135,10 +96,7 @@ main = do
   -- port <- read <$> getEnv "PORT" :: IO Int
   port <- return 8080 :: IO Int
 
-  App.init
-
   let settings = Wai.setPort port Wai.defaultSettings
   putStrLn "updateing catches..."
-  cache <- newIORef =<< App.newCache
   putStrLn $ "server starting at http://localhost:" <> show port
-  Wai.runSettings settings (app cache password)
+  Wai.runSettings settings (app password)

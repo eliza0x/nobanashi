@@ -1,69 +1,37 @@
-module Storage (
-  getAllArticles,
-  upsertArticle,
-  deleteArticle,
-  getAllImages,
-  storeImage,
-  createStaticDirectory
-  ) where
+module Storage where
 
 import Model
 import Data.Text (Text, pack)
 import qualified Data.Text as T
-import qualified Data.Text.Lazy.IO as TL
-import qualified System.Directory as D
+import qualified Data.Text.Lazy as TL
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Text as A
-import qualified Data.ByteString.Lazy as BL
-import Data.ByteString ( ByteString )
-import qualified Data.ByteString.Char8 as B
+import Data.ByteString ( ByteString, fromStrict )
+import qualified Data.ByteString.Char8 as BC
 import Control.Monad (unless, forM)
 
-rootPath, imagePath, postsPath :: FilePath
-rootPath = "static/"
-imagePath = "static/images/"
-postsPath = "static/posts/"
+import qualified Storage.GCP as SG
 
-createStaticDirectory :: IO ()
-createStaticDirectory = do
-  rootExist <- D.doesDirectoryExist rootPath
-  imagesExist <- D.doesDirectoryExist imagePath
-  postsExist <- D.doesDirectoryExist postsPath
+getArticle :: Text -> IO Article
+getArticle path = do
+  f <- SG.getArticle path :: IO ByteString
+  BC.putStrLn f
+  case A.decode $ fromStrict f of
+    Nothing -> error $ "failed to decode \"" <> T.unpack path <> "\""
+    Just a -> return a
 
-  unless rootExist $ D.createDirectory rootPath
-  unless imagesExist $ D.createDirectory imagePath
-  unless postsExist $ D.createDirectory postsPath
+getInfos :: IO [Article]
+getInfos = do
+  sitemap <- A.decode . fromStrict <$> SG.getSitemap
+  case sitemap of
+    Just s -> return s
+    Nothing -> error "sitemapが壊れています"
 
-ls :: FilePath -> IO [FilePath]
-ls = D.listDirectory
-
-readArticle :: FilePath -> IO Article
-readArticle path = do
-  f <- BL.readFile $ postsPath <> path
-  case A.decode f of
-    Nothing -> error $ "failed to decode \"" <> path <> "\""
-    Just a -> do
-      -- print a
-      putStrLn $ path <> "readArticle: " <> path
-      return a
-
-getAllArticles :: IO [Article]
-getAllArticles = mapM readArticle =<< ls postsPath
-
-upsertArticle :: Article -> IO ()
-upsertArticle article = TL.writeFile (postsPath <> T.unpack (path article)) (A.encodeToLazyText article)
-
-deleteArticle :: Text -> IO ()
-deleteArticle path = D.removeFile $ postsPath <> T.unpack path
-
-getAllImages :: IO [(FilePath, FilePath)]
-getAllImages = do
-  category <- ls imagePath
-  concat <$> mapM (\c -> map (\p -> (c,p)) <$> ls (imagePath <> "/" <> c)) category
-
-storeImage :: Text -> Text -> ByteString -> IO ()
-storeImage category path image = do
-  let directory = imagePath <> T.unpack category <> "/"
-  exist <- D.doesDirectoryExist directory
-  unless exist $ D.createDirectory directory
-  B.writeFile (directory <> T.unpack path) image
+uploadArticle :: Article -> IO ()
+uploadArticle article = do
+  infos <- getInfos
+  let infos' = TL.toStrict . A.encodeToLazyText $ dropBody article : infos
+      a = TL.toStrict $ A.encodeToLazyText article :: Text
+      p = path article :: Text
+  SG.uploadSitemap infos' -- 一旦重複対策なしで
+  SG.uploadArticle p a

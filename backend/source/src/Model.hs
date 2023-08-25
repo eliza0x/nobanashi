@@ -2,14 +2,13 @@
 
 module Model (
   Article(..),
-  updateBody,
-  Cache(..)
+  dropBody,
+  updateBody
   ) where
 
 import Data.Aeson
 import GHC.Generics
 import Data.Text (Text)
-import Data.Map.Strict
 import Data.ByteString (ByteString)
 
 data Article = Article {
@@ -24,10 +23,9 @@ data Article = Article {
 instance FromJSON Article
 instance ToJSON Article
 
-updateBody :: Article -> Maybe Text -> Article
-updateBody (Article p t u d ts _) b = Article p t u d ts b
+dropBody :: Article -> Article
+dropBody (Article p t u d ts b) = Article p t u d ts Nothing
 
-data Cache = Cache {
-  article_cache :: Map Text Article,
-  image_cache :: Map FilePath [FilePath]
-} deriving (Show)
+updateBody :: Article -> (Maybe Text) -> Article
+updateBody (Article p t u d ts b) b' = Article p t u d ts b'
+

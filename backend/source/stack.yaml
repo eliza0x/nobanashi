@@ -2,3 +2,7 @@ resolver: lts-20.26
 packages:
 - .
 system-ghc: true
+extra-deps:
+- lib/gogol-0.5.0
+- lib/gogol-core-0.5.0
+- gogol-storage-0.5.0
