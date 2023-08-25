@@ -9,6 +9,7 @@ import qualified Data.Aeson.Text as A
 import Data.ByteString ( ByteString, fromStrict )
 import qualified Data.ByteString.Char8 as BC
 import Control.Monad (unless, forM)
+import qualified Data.Map as M
 
 import qualified Storage.GCP as SG
 
@@ -30,8 +31,10 @@ getInfos = do
 uploadArticle :: Article -> IO ()
 uploadArticle article = do
   infos <- getInfos
-  let infos' = TL.toStrict . A.encodeToLazyText $ dropBody article : infos
-      a = TL.toStrict $ A.encodeToLazyText article :: Text
+  let infos' = TL.toStrict . A.encodeToLazyText . M.toList
+             . M.insert (path article) (dropBody article) 
+             . M.fromList $ map (\i -> (path i, i)) $ infos
+  let a = TL.toStrict $ A.encodeToLazyText article :: Text
       p = path article :: Text
-  SG.uploadSitemap infos' -- 一旦重複対策なしで
+  SG.uploadSitemap infos'
   SG.uploadArticle p a
