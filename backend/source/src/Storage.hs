@@ -31,10 +31,13 @@ getInfos = do
 uploadArticle :: Article -> IO ()
 uploadArticle article = do
   infos <- getInfos
-  let infos' = TL.toStrict . A.encodeToLazyText . M.toList
-             . M.insert (path article) (dropBody article) 
-             . M.fromList $ map (\i -> (path i, i)) $ infos
+  let infos' = TL.toStrict . A.encodeToLazyText . upsert article $ infos
   let a = TL.toStrict $ A.encodeToLazyText article :: Text
       p = path article :: Text
   SG.uploadSitemap infos'
   SG.uploadArticle p a
+
+upsert :: Article -> [Article] -> [Article]
+upsert a as = map snd . M.toList
+  . M.insert (path a) (dropBody a) 
+  . M.fromList $ map (\x -> (path x, x)) $ as
