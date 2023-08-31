@@ -31,7 +31,6 @@ executable nobanashi
                        wai-cors,
                        aeson,
                        containers,
-                       directory,
                        bytestring,
                        cmark,
                        skylighting,

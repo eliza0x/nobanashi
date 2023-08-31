@@ -4,27 +4,19 @@
 
 module Storage.GCP where
 
-import Control.Lens           ((&), (.~), (<&>), (?~), (^.))
-import qualified Control.Lens as L
+import Control.Lens           ((&), (.~), (<&>), (?~))
 import qualified Network.Google as G
-import           Network.Google.Types   (GBody (..))
 import qualified Network.Google.Storage as Storage
-import qualified Network.Google.Storage.Types as ST
-import System.IO              (stdout)
 import Data.ByteString (ByteString)
-import Data.Conduit
+import Data.Conduit ( (.|), runConduit )
 import qualified Conduit as C
-import qualified Data.Conduit.Binary as C
-import qualified Data.Conduit.List as CL
 import qualified Data.Conduit.Combinators as CC
-import Control.Monad.Trans.Resource (ResourceT, liftResourceT)
-import qualified Data.ByteString as B
-import qualified Data.ByteString.Char8 as BC
+import Control.Monad.Trans.Resource (liftResourceT)
 import Data.Text (Text)
-import qualified Data.Text as T
 import qualified Data.String as S
 import Network.HTTP.Media.MediaType ((//))
 
+bucket_articles, bucket_info, file_sitemap :: Text
 bucket_articles = "nobanashi-articles"
 bucket_info = "nobanashi-info"
 file_sitemap = "sitemap.json"

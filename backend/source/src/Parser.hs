@@ -5,7 +5,6 @@ module Parser(parse) where
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
-import qualified Debug.Trace as D 
 
 import qualified CMark
 import qualified Skylighting as S
