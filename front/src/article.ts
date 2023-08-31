@@ -1,21 +1,17 @@
-export type RawArticle = {
+export type ArticleInfo = {
   path: string;
   title: string;
   update: string;
   description: string;
   tags: string[];
-  body: string;
 }
 
 export type Article = {
-  path: string;
-  title: string;
-  update: Date;
-  description: string;
-  tags: string[];
+  info: ArticleInfo;
   body: string;
 }
 
+/*
 export function toArticle(raw_article: RawArticle): Article {
   return {
     path: raw_article.path,
@@ -37,3 +33,4 @@ export function toRawArticle(article: Article): RawArticle {
     body: article.body
   }
 }
+*/

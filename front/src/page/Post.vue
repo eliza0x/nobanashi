@@ -1,11 +1,11 @@
 <template>
   <div>
     <header v-if='typeof article !== "undefined"'>
-      <h1 class="title">{{ article.title }}</h1> 
+      <h1 class="title">{{ article.info.title }}</h1> 
       <nav>
         <a v-on:click="edit_path" class="edit">EDIT</a>
-        <div class="tags">tags: <a class="tag" v-for="tag in article.tags" :key="tag" :href="'/tags/'+tag">#{{ tag }}</a></div>
-        <time>date: {{ article.update.getFullYear() + "/" + article.update.getMonth() + "/" + article.update.getDate() }}</time>
+        <div class="tags">tags: <a class="tag" v-for="tag in article.info.tags" :key="tag" :href="'/tags/'+tag">#{{ tag }}</a></div>
+        <time>date: {{ new Date(article.info.update).getFullYear() + "/" + new Date(article.info.update).getMonth() + "/" + new Date(article.info.update).getDate() }}</time>
       </nav>
     </header>
     <header v-else>
@@ -29,7 +29,7 @@ const article: Ref<Article | undefined> = ref(undefined)
 const html = ref("<p>loading...</p>")
 
 function edit_path() {
-  router.push({ name: 'Edit', params: { id: article.value?.path } })
+  router.push({ name: 'Edit', params: { id: article.value?.info.path } })
 }
 
 onMounted(() => {
@@ -38,7 +38,7 @@ onMounted(() => {
     getArticle(path).then((ret) => {
       article.value = ret
       html.value = ret.body
-      document.title = ret.title
+      document.title = ret.info.title
     }).catch(() => {
       html.value = "<p>記事の取得に失敗しました</p>"
     })

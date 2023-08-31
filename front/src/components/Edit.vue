@@ -34,11 +34,13 @@ const password = ref("");
 function submitArticle() {
   const ts: string[] = tags.value.split(',').map((x) => x.trim()).filter((val, _i, _arr) => val != "");
   const article: Article = { 
-    path: path.value,
-    title: title.value,
-    update: new Date(update.value),
-    description: description.value,
-    tags: ts,
+    info: {
+      path: path.value,
+      title: title.value,
+      update: (new Date(update.value)).toISOString(),
+      description: description.value,
+      tags: ts,
+    },
     body: body.value 
   };
   log.info('article:', article);
@@ -55,11 +57,11 @@ onMounted(() => {
   if (typeof id === 'string') {
     path.value = id
     getPlainArticle(id).then(article => {
-      path.value = article.path
-      title.value = article.title
-      update.value = new Date(article.update)
-      description.value = article.description
-      tags.value = article.tags.join(" ")
+      path.value = article.info.path
+      title.value = article.info.title
+      update.value = new Date(article.info.update)
+      description.value = article.info.description
+      tags.value = article.info.tags.join(" ")
       body.value = article.body
     })
   }

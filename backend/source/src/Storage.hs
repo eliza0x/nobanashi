@@ -1,4 +1,8 @@
-module Storage where
+module Storage (
+  getInfos,
+  getArticle,
+  uploadArticle
+  ) where
 
 import Model
 import Data.Text (Text)
@@ -13,31 +17,35 @@ import qualified Data.Map as M
 
 import qualified Storage.GCP as SG
 
-getArticle :: Text -> IO Article
-getArticle path = do
-  f <- SG.getArticle path :: IO ByteString
-  BC.putStrLn f
-  case A.decode $ B.fromStrict f of
-    Nothing -> error $ "failed to decode \"" <> T.unpack path <> "\""
-    Just a -> return a
-
-getInfos :: IO [Article]
+getInfos :: IO [ArticleInfo]
 getInfos = do
   sitemap <- A.decode . B.fromStrict <$> SG.getSitemap
   case sitemap of
     Just s -> return s
     Nothing -> error "sitemapが壊れています"
 
-uploadArticle :: Article -> IO ()
-uploadArticle article = do
-  infos <- getInfos
-  let infos' = TL.toStrict . A.encodeToLazyText . upsert article $ infos
-  let a = TL.toStrict $ A.encodeToLazyText article :: Text
-      p = path article :: Text
-  SG.uploadSitemap infos'
-  SG.uploadArticle p a
+uploadInfos :: [ArticleInfo] -> IO ()
+uploadInfos = SG.uploadSitemap . TL.toStrict . A.encodeToLazyText
 
-upsert :: Article -> [Article] -> [Article]
+appendInfo :: ArticleInfo -> IO ()
+appendInfo i = uploadInfos . upsert i =<< getInfos
+
+getArticle :: Text -> IO Article
+getArticle article_path = do
+  f <- SG.getArticle article_path :: IO ByteString
+  case A.decode $ B.fromStrict f of
+    Nothing -> do
+      error $ BC.unpack f
+      error $ "failed to decode \"" <> T.unpack article_path <> "\""
+    Just a -> return a
+
+uploadArticle :: Article -> IO ()
+uploadArticle a = do
+  let json = TL.toStrict $ A.encodeToLazyText a :: Text
+  appendInfo $ info a -- 記事更新に合わせてsitemapも更新
+  SG.uploadArticle (path $ info a) json
+
+upsert :: ArticleInfo -> [ArticleInfo] -> [ArticleInfo]
 upsert a as = map snd . M.toList
-  . M.insert (path a) (dropBody a) 
-  . M.fromList $ map (\x -> (path x, x)) $ as
+  . M.insert (path a) a
+  . M.fromList $ map (\x -> (path x, x)) as

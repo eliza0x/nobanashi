@@ -17,9 +17,9 @@
 </template>
 
 <script setup lang="ts">
-import { Article } from '../article';
+import { ArticleInfo } from '../article';
 const props = defineProps<{
-  article_list: Article[]
+  article_list: ArticleInfo[]
 }>()
 </script>
 

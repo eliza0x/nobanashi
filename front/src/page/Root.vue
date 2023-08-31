@@ -10,11 +10,11 @@ import { Ref, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import PostList from '../components/PostList.vue'
 import { getArticleInfo } from '../api.js';
-import { Article } from '../article';
+import { ArticleInfo } from '../article';
 
 const router = useRouter()
 
-const article_list: Ref<Article[]> = ref([])
+const article_list: Ref<ArticleInfo[]> = ref([])
 
 onMounted(() => {
   {

@@ -11,27 +11,23 @@ import qualified Storage as S
 import qualified Network.Wai.Handler.Warp as Wai
 import Servant
 import Data.Text (Text)
-import Data.Maybe ( fromMaybe )
 import Control.Monad.IO.Class (liftIO)
-import Data.IORef ( IORef, newIORef )
 import Network.Wai.Middleware.Cors ( cors, simpleCorsResourcePolicy, CorsResourcePolicy(corsRequestHeaders, corsMethods) )
-import Data.ByteString (ByteString)
 import Data.Text.Encoding (decodeUtf8)
 import Network.Wai.Middleware.RequestLogger ( logStdoutDev )
 import System.Environment (getEnv)
 import qualified Data.Text as T
-import Control.Exception (catch, IOException)
-import Data.Maybe (fromJust)
+import qualified Data.Set as Set
 
 newtype AuthInfo = AuthInfo {
   username :: Text
   } deriving (Show)
 
 type API = Get '[JSON] Text
-      :<|> "article" :> Get '[JSON] [Article]
+      :<|> "article" :> Get '[JSON] [ArticleInfo]
       :<|> "article" :> Capture "path" Text :> Get '[JSON] Article
       :<|> BasicAuth "auth" AuthInfo :> "article" :> Capture "path" Text :> ReqBody '[JSON] Article :> Post '[JSON] NoContent
-      
+
       :<|> "plain_article" :> Capture "path" Text :> Get '[JSON] Article
 
       :<|> "tag" :> Get '[JSON] [Text]
@@ -44,16 +40,15 @@ server = getRoot
   where getRoot :: Handler Text
         getRoot = return "こんにちは"
 
-        getAllArticle :: Handler [Article]
-        getAllArticle = liftIO $ S.getInfos
+        getAllArticle :: Handler [ArticleInfo]
+        getAllArticle = liftIO S.getInfos
 
         getArticle :: Text -> Handler Article
         getArticle path = liftIO $ do
           article <- S.getArticle path
-          let body = fromJust $ Model.body article
-          return $ case P.parse body of
-            Right html -> Model.updateBody article (Just html)
-            Left err -> Model.updateBody article (Just err) -- これあんまりよくないかも
+          return $ case P.parse (Model.body article) of
+            Right html -> Model.Article (Model.info article) html
+            Left err -> Model.Article (Model.info article) err -- これあんまりよくないかも
 
         uploadArticle :: AuthInfo -> Text -> Article -> Handler NoContent
         uploadArticle _ _ article = liftIO $ do
@@ -65,7 +60,7 @@ server = getRoot
           S.getArticle path
 
         getTags :: Handler [Text]
-        getTags = liftIO $ return [] -- 一旦省略
+        getTags = liftIO (Set.toList . Set.fromList . concatMap Model.tags <$> S.getInfos)
 
 api :: Proxy API
 api = Proxy

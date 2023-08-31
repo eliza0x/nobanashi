@@ -2,30 +2,28 @@
 
 module Model (
   Article(..),
-  dropBody,
-  updateBody
+  ArticleInfo(..)
   ) where
 
 import Data.Aeson
 import GHC.Generics
 import Data.Text (Text)
-import Data.ByteString (ByteString)
 
 data Article = Article {
-  path :: Text,
-  title :: Text,
-  update :: Text,
-  description :: Text,
-  tags :: [Text],
-  body :: Maybe Text
+  info :: ArticleInfo,
+  body :: Text
   } deriving (Show, Generic)
 
 instance FromJSON Article
 instance ToJSON Article
 
-dropBody :: Article -> Article
-dropBody (Article p t u d ts b) = Article p t u d ts Nothing
+data ArticleInfo = ArticleInfo {
+  path :: Text,
+  title :: Text,
+  update :: Text,
+  description :: Text,
+  tags :: [Text]
+  } deriving (Show, Generic)
 
-updateBody :: Article -> (Maybe Text) -> Article
-updateBody (Article p t u d ts b) b' = Article p t u d ts b'
-
+instance FromJSON ArticleInfo
+instance ToJSON ArticleInfo

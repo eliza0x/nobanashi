@@ -1,30 +1,27 @@
 import axios from 'axios'
 import { api_article_root, api_plain_article_root, api_root } from './config'
-import { Article, toArticle, toRawArticle } from './article'
+import { Article, ArticleInfo } from './article'
 
 const default_user = 'user'
 
 export function createArticle(article: Article, pass: string): Promise<any> {
-  const url = api_article_root + article.path
-  const raw_article = toRawArticle(article)
-  return axios.post(url, raw_article, { auth: { username: default_user, password: pass } })
+  const url = api_article_root + article.info.path
+  return axios.post(url, article, { auth: { username: default_user, password: pass } })
 }
 
-export async function getArticleInfo(): Promise<Article[]> {
+export async function getArticleInfo(): Promise<ArticleInfo[]> {
   let resp = await axios.get(api_article_root);
   return resp.data
 }
 
 export async function getArticle(path: string): Promise<Article> {
   const resp = await axios.get(api_article_root + path);
-  const raw = resp.data
-  return toArticle(raw)
+  return resp.data
 }
 
 export async function getPlainArticle(path: string): Promise<Article> {
   const resp = await axios.get(api_plain_article_root + path);
-  const raw = resp.data
-  return toArticle(raw)
+  return resp.data
 }
 
 export async function postImage(category: string, image: File, fallback_name: string, pass: string) {

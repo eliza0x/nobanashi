@@ -6,9 +6,9 @@
 import { ref, onMounted, Ref } from 'vue';
 import PostList from '../components/PostList.vue'
 import { getArticleInfo } from '../api';
-import { Article } from '../article';
+import { ArticleInfo } from '../article';
 
-const article_list: Ref<Article[]> = ref([])
+const article_list: Ref<ArticleInfo[]> = ref([])
 onMounted(() => {
   getArticleInfo().then((ret) => {
     article_list.value = ret;

@@ -10,14 +10,14 @@ import { ref, onMounted, Ref } from 'vue'
 import PostList from '../components/PostList.vue'
 import { useRoute } from 'vue-router';
 import { getArticleInfo } from '../api';
-import { Article } from '../article';
+import { ArticleInfo } from '../article';
 import { useLogger } from 'vue-logger-plugin';
 
 const route = useRoute()
 const log = useLogger()
 
 const tag: Ref<string> = ref("")
-const article_list: Ref<Article[]> = ref([])
+const article_list: Ref<ArticleInfo[]> = ref([])
 
 onMounted(() => {
   const t = route.params.id
