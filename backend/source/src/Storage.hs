@@ -8,11 +8,13 @@ import Model
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
+import qualified Data.Text.IO as TI
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Text as A
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as B
 import qualified Data.ByteString.Char8 as BC
+import qualified Data.ByteString.Lazy.Char8 as BLC
 import qualified Data.Map as M
 
 import qualified Storage.GCP as SG
@@ -25,7 +27,7 @@ getInfos = do
     Nothing -> error "sitemapが壊れています"
 
 uploadInfos :: [ArticleInfo] -> IO ()
-uploadInfos = SG.uploadSitemap . TL.toStrict . A.encodeToLazyText
+uploadInfos = SG.uploadSitemap . BLC.unpack . A.encode
 
 appendInfo :: ArticleInfo -> IO ()
 appendInfo i = uploadInfos . upsert i =<< getInfos
@@ -34,14 +36,13 @@ getArticle :: Text -> IO Article
 getArticle article_path = do
   f <- SG.getArticle article_path :: IO ByteString
   case A.decode $ B.fromStrict f of
-    Nothing -> do
-      error $ BC.unpack f
-      error $ "failed to decode \"" <> T.unpack article_path <> "\""
+    Nothing -> error $ "failed to decode \"" <> T.unpack article_path <> "\""
     Just a -> return a
 
 uploadArticle :: Article -> IO ()
 uploadArticle a = do
-  let json = TL.toStrict $ A.encodeToLazyText a :: Text
+  print a
+  let json = BLC.unpack $ A.encode a :: String
   appendInfo $ info a -- 記事更新に合わせてsitemapも更新
   SG.uploadArticle (path $ info a) json
 

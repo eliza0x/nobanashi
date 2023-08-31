@@ -43,7 +43,8 @@ executable nobanashi
                        gogol-core,
                        gogol-storage,
                        lens,
-                       exceptions
+                       exceptions,
+                       http-media
   ghc-options:         -Wall
                        -Wcompat
                        -Widentities

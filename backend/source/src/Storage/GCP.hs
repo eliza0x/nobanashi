@@ -23,6 +23,7 @@ import qualified Data.ByteString.Char8 as BC
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.String as S
+import Network.HTTP.Media.MediaType ((//))
 
 bucket_articles = "nobanashi-articles"
 bucket_info = "nobanashi-info"
@@ -33,17 +34,18 @@ genEnv = do
     -- G.newEnv <&> (G.envLogger .~ lgr) . (G.envScopes .~ Storage.storageReadWriteScope)
     G.newEnv <&> (G.envScopes .~ Storage.storageReadWriteScope)
 
-upload :: Text -> Text -> Text -> IO ()
+upload :: Text -> Text -> String -> IO ()
 upload bkt key body = do
     env <- genEnv
-    C.runResourceT . G.runGoogle env $ do
-        G.upload (Storage.objectsInsert bkt Storage.object' & Storage.oiName ?~ key) (S.fromString $ T.unpack body)
+    let ins = Storage.objectsInsert bkt Storage.object' & Storage.oiName ?~ key
+        obj = S.fromString body & G.bodyContentType .~ ("application" // "json")
+    _ <- C.runResourceT $ G.runGoogle env (G.upload ins obj)
     return ()
 
-uploadSitemap :: Text -> IO ()
+uploadSitemap :: String -> IO ()
 uploadSitemap = upload bucket_info file_sitemap
 
-uploadArticle :: Text -> Text -> IO ()
+uploadArticle :: Text -> String -> IO ()
 uploadArticle = upload bucket_articles
 
 -- 例外が飛ぶ、なんかいい感じのハンドリングを考える
