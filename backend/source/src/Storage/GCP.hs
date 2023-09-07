@@ -8,6 +8,7 @@ import Control.Lens           ((&), (.~), (<&>), (?~))
 import qualified Network.Google as G
 import qualified Network.Google.Storage as Storage
 import Data.ByteString (ByteString)
+import qualified Data.ByteString as B
 import Data.Conduit ( (.|), runConduit )
 import qualified Conduit as C
 import qualified Data.Conduit.Combinators as CC
@@ -47,7 +48,7 @@ get bkt file = do
     ret <- C.runResourceT . G.runGoogle env $ do
         stream <- G.download $ Storage.objectsGet bkt file
         liftResourceT $ runConduit (stream .| CC.sinkList)
-    return $ head ret
+    return $ B.concat ret
 
 getSitemap :: IO ByteString
 getSitemap = get bucket_info file_sitemap
