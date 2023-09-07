@@ -17,10 +17,10 @@ import qualified Storage.GCP as SG
 
 getInfos :: IO [ArticleInfo]
 getInfos = do
-  sitemap <- A.decode . B.fromStrict <$> SG.getSitemap
+  sitemap <- A.eitherDecode . B.fromStrict <$> SG.getSitemap
   case sitemap of
-    Just s -> return s
-    Nothing -> error "sitemapが壊れています"
+    Right s -> return s
+    Left e -> error $ "sitemapが壊れています: " ++ e
 
 uploadInfos :: [ArticleInfo] -> IO ()
 uploadInfos = SG.uploadSitemap . BLC.unpack . A.encode
@@ -31,9 +31,9 @@ appendInfo i = uploadInfos . upsert i =<< getInfos
 getArticle :: Text -> IO Article
 getArticle article_path = do
   f <- SG.getArticle article_path :: IO ByteString
-  case A.decode $ B.fromStrict f of
-    Nothing -> error $ "failed to decode \"" <> T.unpack article_path <> "\""
-    Just a -> return a
+  case A.eitherDecode $ B.fromStrict f of
+    Left e -> error $ "failed to decode \"" <> T.unpack article_path <> "\": " <> e
+    Right a -> return a
 
 uploadArticle :: Article -> IO ()
 uploadArticle a = do
