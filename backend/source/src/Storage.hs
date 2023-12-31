@@ -6,6 +6,7 @@ module Storage (
 
 import Model
 import Data.Text (Text)
+import Data.List (sortBy)
 import qualified Data.Text as T
 import qualified Data.Aeson as A
 import Data.ByteString (ByteString)
@@ -20,8 +21,10 @@ getInfos :: IO [ArticleInfo]
 getInfos = do
   sitemap <- A.eitherDecode . B.fromStrict <$> SG.getSitemap
   case sitemap of
-    Right s -> return s
+    Right s -> return . sortByUpdate $ s
     Left e -> error $ "sitemapが壊れています: " ++ e
+  where
+  sortByUpdate = sortBy (\x y -> compare (update y) (update x))
 
 uploadInfos :: [ArticleInfo] -> IO ()
 uploadInfos = SG.uploadSitemap . BLC.unpack . A.encode
