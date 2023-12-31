@@ -19,6 +19,7 @@ const routes = [
   { path: '/posts', name: 'PostList', component: PostList },
   { path: '/posts/new', name: 'New', component: New },
   { path: '/posts/:id/edit', name: 'Edit', component: Edit },
+  { path: '/posts/:id.html', redirect: '/posts/:id' },
   { path: '/posts/:id', name: 'Post', component: Post },
   { path: '/tags/:id', name: 'TagPageList', component: TagPageList },
   { path: '/images', name: 'Upload', component: Upload },

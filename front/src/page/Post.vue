@@ -34,6 +34,18 @@ function edit_path() {
 
 onMounted(() => {
   const path = useRoute().params.id
+  {
+    // XXXX.html のページは XXXX にリダイレクトする
+    console.log(path)
+    console.log(path.slice(path.length-('.html'.length), path.length))
+    const is_html = path.slice(path.length-('.html'.length), path.length) === '.html'
+    if (is_html) {
+      const redirect_path = path.slice(0, path.length-('.html'.length))
+      console.log(redirect_path)
+      // router.push({ name: 'Post', params: { id: redirect_path } })
+    }
+  }
+
   if (typeof path === 'string') {
     getArticle(path).then((ret) => {
       article.value = ret

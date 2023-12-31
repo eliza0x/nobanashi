@@ -16,15 +16,31 @@ const router = useRouter()
 
 const article_list: Ref<ArticleInfo[]> = ref([])
 
-onMounted(() => {
-  {
+function redirectWhenHashUsing(hash: string) {
     // Vue2でブログを作った時にhash routingをしていたがやめたので、その時代のURLのためのフォールバック
-    const hash = useRoute().hash
     const hash_posts_path = "#/posts/"
-    // const hash_slides_path = "#/slides/"
+    // const hash_slides_path = "#/slides/" // slideのｈリダイレクトは将来で
     const need_redirect = hash.slice(0, hash_posts_path.length) === hash_posts_path
     if (need_redirect) {
       const redirect_path = hash.slice(hash_posts_path.length, hash.length)
+      router.push({ name: 'Post', params: { id: redirect_path } })
+    }
+}
+
+onMounted(() => {
+  const route = useRoute()
+  {
+    const hash = route.hash
+    redirectWhenHashUsing(hash)
+  }
+  {
+    // XXXX.html のページは XXXX にリダイレクトする
+    const path = route.fullPath
+    console.log(path)
+    console.log(path.slice(path.length-('.html'.length), path.length))
+    const is_html = path.slice(path.length-('.html'.length), path.length) === '.html'
+    if (is_html) {
+      const redirect_path = path.slice(0, path.length-('.html'.length))
       router.push({ name: 'Post', params: { id: redirect_path } })
     }
   }
