@@ -1,3 +1,6 @@
 {
-    "rewrites": [{ "source": "/:path*", "destination": "/index.html" }]
+    "rewrites": [
+        { "source": "/static/:path", "destination": "https://storage.cloud.google.com/nobanashi-images/static/:path" },
+        { "source": "/:path*", "destination": "/index.html" }
+    ]
 }
