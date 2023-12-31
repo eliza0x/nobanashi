@@ -1,7 +1,6 @@
 {
     "rewrites": [
-        { "source": "/static/:category/:path", "destination": "https://storage.cloud.google.com/nobanashi-images/static/:category/:path" },
-        { "source": "/static/:path", "destination": "https://storage.cloud.google.com/nobanashi-images/static/:path" },
+        { "source": "/static/:path*", "destination": "https://storage.cloud.google.com/nobanashi-images/static/:path*" },
         { "source": "/:path*", "destination": "/index.html" }
     ]
 }
