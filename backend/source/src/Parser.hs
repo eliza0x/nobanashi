@@ -16,7 +16,8 @@ highlightNode (CMark.Node pos type' nodes) = (CMark.Node pos <$> highlightNode' 
     where 
     highlightNode' :: CMark.NodeType -> Either Text CMark.NodeType
     highlightNode' (CMark.CODE_BLOCK lang code) = case highlight lang code of
-        Left e -> Left e
+        -- Left e -> Left e
+        Left e -> Right $ CMark.CODE_BLOCK lang code
         Right html -> Right . CMark.HTML_BLOCK . TL.toStrict . B.renderHtml $ html
     highlightNode' other = Right other
 
