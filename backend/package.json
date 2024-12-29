@@ -1,0 +1,19 @@
+{
+  "name": "d1-hono-drizzle",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "generate": "drizzle-kit generate",
+    "local:migration": "wrangler d1 migrations apply blog-d1 --local",
+    "remote:migration": "wrangler d1 migrations apply blog-d1 --remote"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.38.2",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "drizzle-kit": "^0.30.1",
+    "wrangler": "^3.96.0"
+  }
+}
