@@ -4,7 +4,7 @@ export const articles = sqliteTable(
 	"articles",
 	{
 		id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-		path: text("path").notNull(),
+		path: text("path").notNull().unique(),
 		title: text("title").notNull(),
 		update: text("update").notNull(),
 		description: text("description").notNull(),
@@ -27,7 +27,7 @@ export const tags = sqliteTable(
 	"tags",
 	{
 		id: integer("id", { mode: "number" }).primaryKey({ autoIncrement: true }),
-		tag: text("tag").notNull(),
+		tag: text("tag").notNull().unique(),
 	},
 	() => [],
 );
